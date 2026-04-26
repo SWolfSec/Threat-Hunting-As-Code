@@ -38,25 +38,26 @@ This project supports multiple hunt classes so teams can balance proactive and r
 - `.github/workflows/hunt-metrics.yml` - Workflow that produces hunt metrics/dashboard inputs.
 - `.github/workflows/suggest-hunt-ideas.yml` - Workflow for generating or proposing hunt ideas.
 - `templates/hunt-template.md` - Canonical hunt content template.
+- `templates/campaign-template.md` - Canonical high-level campaign umbrella template.
+- `campaigns/` - Campaign markdown artifacts (umbrella only).
 - `scripts/metrics/` - Parsing and dashboard generation scripts.
 - `docs/dashboard.md` - Dashboard documentation and metric definitions.
 
-## Quick Start (First Hunt in 10 Minutes)
+## Quick start (campaigns + hunts)
+
+1. **Create a campaign** using the GitHub issue form **New Campaign**, then add the approved umbrella under `campaigns/<campaign_slug>.md` using `templates/campaign-template.md` (set `campaign_slug` to a unique kebab-case value).
+2. **Create individual hunts** under `hunts/` and link them to the umbrella by setting **`campaign_slugs`** (preferred) and/or a kebab-case entry in **`campaigns`** that exactly matches the campaign’s `campaign_slug`. Standalone hunts can keep `campaigns: ["none"]` and omit `campaign_slugs`.
+
+After that, open a PR: CI validates hunt + campaign metadata; when merged, metrics refresh `docs/dashboard.md` and auto-update each campaign file’s **Linked hunts** and **Aggregated outcomes** sections.
+
+### First hunt checklist (after the umbrella exists)
 
 1. Open GitHub Issues and select **New Threat Hunt**.
-2. Fill in required metadata:
-   - hunt type
-   - MITRE techniques/tactics
-   - data sources and data source locations
-   - query languages and outcomes
-3. Submit the issue and get triaged/assigned.
-4. Create a branch and copy `templates/hunt-template.md` into `hunts/<your-hunt>.md`.
-5. Complete PEAK sections (Prepare, Execute, Act, Knowledge) and add parser blocks:
-   - at least one `threat-hunt-query` block
-   - IOC blocks as needed
-6. Open a PR to `main`.
-7. PR validation runs automatically and fails if required metadata is missing.
-8. After merge, dashboard metrics are regenerated and committed to `docs/dashboard.md`.
+2. Fill in required metadata (hunt type, MITRE IDs, data sources/locations, query languages, outcomes).
+3. Set **`campaign_slugs: ["your-campaign-slug"]`** (or use a matching kebab-case `campaigns` entry) so the hunt rolls up under the campaign.
+4. Copy `templates/hunt-template.md` into `hunts/<your-hunt>.md` and complete PEAK + at least one `threat-hunt-query` block.
+5. Open a PR to `main`; validation fails if required fields or unknown `campaign_slug` references are missing.
+6. After merge, the metrics job regenerates the dashboard and updates linked campaign sections.
 
 ## Submit a New Hunt (via Issues)
 
@@ -80,10 +81,10 @@ The dashboard pipeline is intended to continuously summarize hunt program health
 
 At a high level:
 
-1. Hunt metadata and status updates are ingested from repository artifacts.
-2. Metrics scripts in `scripts/metrics/` parse and normalize hunt data.
-3. The workflow in `.github/workflows/hunt-metrics.yml` runs on schedule and/or repository events.
-4. Generated outputs are published into dashboard docs/content (see `docs/dashboard.md`).
+1. Hunt and campaign metadata are read from `hunts/` and `campaigns/` markdown frontmatter.
+2. `scripts/metrics/parse_hunts.py` validates artifacts, links hunts to campaigns by `campaign_slug`, and refreshes auto-sections inside campaign files.
+3. The workflow in `.github/workflows/hunt-metrics.yml` runs on pull requests (validation) and after merges to `main` (regenerate + commit).
+4. `scripts/metrics/generate_dashboard.py` publishes `docs/dashboard.md` (hunt metrics plus an **Active Campaigns** rollup).
 
 Common metrics include:
 

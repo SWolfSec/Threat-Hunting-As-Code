@@ -96,6 +96,8 @@ def build_summary_section(metrics: dict[str, Any], meta: dict[str, Any]) -> str:
     hunts_total = int(totals.get("hunts_total", 0))
     hunts_valid = int(meta.get("hunts_valid", 0))
     hunts_invalid = int(meta.get("hunts_invalid", 0))
+    campaigns_valid = int(meta.get("campaigns_valid", 0))
+    campaigns_invalid = int(meta.get("campaigns_invalid", 0))
     queries_total = int(totals.get("query_blocks_total", 0))
     iocs_total = int(totals.get("ioc_blocks_total", 0))
 
@@ -112,6 +114,8 @@ def build_summary_section(metrics: dict[str, Any], meta: dict[str, Any]) -> str:
             f"| Hunts scanned | {int(meta.get('hunts_scanned', 0))} |",
             f"| Hunts valid | {hunts_valid} |",
             f"| Hunts invalid | {hunts_invalid} |",
+            f"| Campaigns valid | {campaigns_valid} |",
+            f"| Campaigns invalid | {campaigns_invalid} |",
             f"| Hunts total (metrics scope) | {hunts_total} |",
             f"| Query blocks extracted | {queries_total} |",
             f"| IOC blocks extracted | {iocs_total} |",
@@ -120,6 +124,66 @@ def build_summary_section(metrics: dict[str, Any], meta: dict[str, Any]) -> str:
             f"| Hunts with visibility created | {hunts_with_visibility} ({pct(hunts_with_visibility, hunts_total)}%) |",
         ]
     )
+
+
+def _short_label(slug: str, max_len: int = 14) -> str:
+    s = str(slug)
+    if len(s) <= max_len:
+        return s
+    return s[: max_len - 1] + "…"
+
+
+def build_active_campaigns_section(payload: dict[str, Any]) -> str:
+    rows = payload.get("campaigns_summary", [])
+    if not isinstance(rows, list) or not rows:
+        return "\n".join(
+            [
+                "## Active Campaigns",
+                "",
+                "> No campaign files found under `campaigns/`, or none passed validation.",
+                "",
+            ]
+        )
+
+    sorted_rows = sorted(
+        rows,
+        key=lambda r: (-int(r.get("linked_hunt_count", 0) or 0), str(r.get("campaign_slug", ""))),
+    )
+
+    bar_items = [
+        (_short_label(str(r.get("campaign_slug", "unknown"))), int(r.get("linked_hunt_count", 0) or 0))
+        for r in sorted_rows
+    ]
+
+    lines = [
+        "## Active Campaigns",
+        "",
+        "Campaigns with linked hunts (from `campaigns/*.md` and hunt `campaign_slugs` / kebab `campaigns` entries).",
+        "",
+        mermaid_bar("Linked hunts per campaign (count)", bar_items),
+        "",
+        "| Campaign | Threat actor | # Linked hunts | MITRE % covered (children) | Detections created (hunts) | Last activity | Campaign file |",
+        "| --- | --- | ---: | ---: | ---: | --- | --- |",
+    ]
+
+    for r in sorted_rows:
+        title = str(r.get("title", "n/a")).replace("|", "\\|")
+        slug = str(r.get("campaign_slug", "n/a"))
+        an = str(r.get("threat_actor_name", "n/a"))
+        at = str(r.get("threat_actor_type", "n/a"))
+        actor = f"{an} ({at})".replace("|", "\\|")
+        nlink = int(r.get("linked_hunt_count", 0) or 0)
+        mitre_pct = r.get("mitre_from_children", {}).get("coverage_percent_of_known_tactics", 0)
+        det_hunts = int(r.get("aggregated_outcomes", {}).get("hunts_with_detection", 0) or 0)
+        last = str(r.get("last_activity_date") or "—")
+        path = str(r.get("path", ""))
+        link = f"[Open]({path})" if path else "—"
+        lines.append(
+            f"| {title} | {actor} | {nlink} | {mitre_pct} | {det_hunts} | {last} | {link} |"
+        )
+
+    lines.append("")
+    return "\n".join(lines)
 
 
 def build_recent_hunts_table(payload: dict[str, Any]) -> str:
@@ -163,8 +227,7 @@ def build_recent_hunts_table(payload: dict[str, Any]) -> str:
             "## Recent Hunts",
             "",
             "> [!NOTE]",
-            "> Recent hunt row details are not present in the current metrics JSON payload.",
-            "> Add a per-hunt list in `parse_hunts.py` (id/title/type/status/updated_date) to populate this table automatically.",
+            "> No hunt rows in JSON (expected when no valid hunts are parsed).",
             "",
             "| Hunt ID | Title | Type | Status | Last Updated |",
             "| --- | --- | --- | --- | --- |",
@@ -290,6 +353,8 @@ def build_dashboard(payload: dict[str, Any]) -> str:
         "# Threat Hunt Dashboard",
         "",
         f"_Generated: {generated_at}_",
+        "",
+        build_active_campaigns_section(payload),
         "",
         build_summary_section(metrics, meta),
         "",

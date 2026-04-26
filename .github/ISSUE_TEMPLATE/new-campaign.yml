@@ -1,0 +1,168 @@
+name: "New Campaign"
+title: "New Campaign"
+description: "Propose a high-level threat campaign umbrella (separate from individual hunts)."
+labels:
+  - campaign
+  - intake
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Campaign intake (high level only)
+
+        Use this form to capture **umbrella-level** campaign context. It does **not** replace a hunt: no queries, IOCs, or PEAK hunt phases here.
+
+        **This creates the high-level umbrella.** Individual hunts will be linked later by adding this `campaign_slug` to their hunt frontmatter (e.g. under `campaigns`).
+
+        Suggested slug format: lowercase, hyphen-separated (example: `midnight-blizzard-2026-q2`).
+
+  - type: input
+    id: campaign_title
+    attributes:
+      label: "title"
+      description: "Short campaign title as you want it displayed in reporting."
+      placeholder: "Example: Midnight Blizzard credential access wave"
+    validations:
+      required: true
+
+  - type: input
+    id: campaign_slug_suggested
+    attributes:
+      label: "campaign_slug (suggested)"
+      description: "Optional: paste an auto-suggested slug here for reviewers to align on naming (you can copy from title)."
+      placeholder: "midnight-blizzard-2026-q2"
+    validations:
+      required: false
+
+  - type: input
+    id: campaign_slug
+    attributes:
+      label: "campaign_slug (canonical)"
+      description: "The canonical slug used in hunt frontmatter and dashboards. Must match what hunts will reference."
+      placeholder: "midnight-blizzard-2026-q2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: threat_actor_type
+    attributes:
+      label: "threat_actor_type"
+      description: "Primary actor class for this campaign umbrella."
+      options:
+        - nation_state
+        - cybercrime
+        - hacktivist
+        - insider
+        - unknown
+        - other
+    validations:
+      required: true
+
+  - type: input
+    id: threat_actor_name
+    attributes:
+      label: "threat_actor_name"
+      description: "Actor or cluster name if known (e.g. group alias). Use `unknown` if not attributable."
+      placeholder: "APT29"
+    validations:
+      required: true
+
+  - type: input
+    id: start_date
+    attributes:
+      label: "start_date"
+      description: "Campaign start date (ISO 8601, YYYY-MM-DD)."
+      placeholder: "2026-01-01"
+    validations:
+      required: true
+
+  - type: input
+    id: end_date
+    attributes:
+      label: "end_date (optional)"
+      description: "Campaign end date if bounded (ISO 8601, YYYY-MM-DD). Leave blank if ongoing."
+      placeholder: "2026-06-30"
+    validations:
+      required: false
+
+  - type: textarea
+    id: objectives
+    attributes:
+      label: "description / objectives (summary)"
+      description: "One short paragraph: what this campaign is about and what success looks like at umbrella level."
+      placeholder: |
+        Example:
+        Track and contextualize coordinated credential access activity attributed to X across identity and endpoint telemetry.
+    validations:
+      required: true
+
+  - type: textarea
+    id: campaign_overview
+    attributes:
+      label: "Campaign overview (full narrative)"
+      description: "Free text: timeline, context, scope, intelligence sources, and anything reviewers need. No hunt execution detail."
+      render: markdown
+      placeholder: |
+        ## Context
+        (who, what, why this umbrella exists)
+
+        ## Scope
+        (geography, business units, tech stack boundaries)
+
+        ## Intelligence / sourcing
+        (public reporting, internal IR, partner briefings — no sensitive paste of classified material)
+
+        ## Notes for hunters
+        (what kinds of hunts will plug in later; not the hunts themselves)
+    validations:
+      required: true
+
+  - type: textarea
+    id: overall_mitre
+    attributes:
+      label: "overall_mitre_tactics_and_techniques"
+      description: "List tactic IDs (TAxxxx) and technique IDs (Txxxx) relevant to this campaign umbrella, one per line."
+      placeholder: |
+        TA0006
+        TA0008
+        T1110
+        T1558.003
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_outcomes
+    attributes:
+      label: "expected_outcomes"
+      description: "What this umbrella should drive (e.g. hunt backlog, detection gaps closed, visibility). Bullet list OK."
+      placeholder: |
+        - Prioritized hunt backlog aligned to campaign TTPs
+        - Improved ATT&CK coverage for identity abuse patterns
+        - Leadership-ready reporting on campaign-linked hunt progress
+    validations:
+      required: true
+
+  - type: textarea
+    id: references
+    attributes:
+      label: "references"
+      description: "URLs, report titles, or ticket IDs (one per line). Prefer stable public links when possible."
+      placeholder: |
+        https://example.com/threat-intel-report
+        Internal ticket: SEC-12345
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: "Confirmation"
+      description: "This issue is for campaign umbrella metadata only."
+      options:
+        - label: "I understand this form is high-level only: no queries, IOCs, or PEAK hunt phases."
+          required: true
+        - label: "I understand individual hunts will link to this umbrella later via `campaign_slug` in hunt frontmatter."
+          required: true
+        - label: "I will not paste operational secrets, credentials, or customer-identifying raw data."
+          required: true

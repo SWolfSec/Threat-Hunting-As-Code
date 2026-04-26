@@ -43,6 +43,11 @@ threat_actors:
 campaigns:
   - "none"
 
+# Optional: link to umbrella campaign(s) by canonical slug (must match campaigns/*.md frontmatter).
+# Preferred for metrics rollups. Omit entirely for standalone hunts.
+# campaign_slugs:
+#   - "your-campaign-slug"
+
 # Controlled data source categories used in this hunt
 data_sources:
   - "edr_alerts"
