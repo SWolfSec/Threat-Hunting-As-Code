@@ -1,0 +1,347 @@
+name: "new hunt"
+title: "New Threat Hunt"
+description: "Submit a structured PEAK hunt proposal and draft metadata."
+labels:
+  - hunt
+  - intake
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## PEAK Hunt Intake Instructions
+
+        Complete this form so the hunt can be reviewed and converted into a draft hunt artifact.
+
+        Follow **PEAK** phases in your documentation:
+        - **Prepare**: define hypothesis, scope, assumptions, and telemetry prerequisites
+        - **Execute**: run queries/analytics, test logic, and record observations
+        - **Act**: document findings, response actions, and detection engineering follow-ups
+        - **Knowledge**: capture lessons learned and reusable hunt guidance
+
+        This issue body is intentionally structured for later automation that generates a draft hunt file.
+
+  - type: input
+    id: hunt_title
+    attributes:
+      label: "title"
+      description: "Short, specific title for this hunt."
+      placeholder: "Suspicious PowerShell spawned by Office applications"
+    validations:
+      required: true
+
+  - type: input
+    id: hunt_id
+    attributes:
+      label: "hunt_id"
+      description: "Use placeholder now; automation can replace later."
+      placeholder: "HUNT-YYYY-XXXX"
+    validations:
+      required: true
+
+  - type: input
+    id: author
+    attributes:
+      label: "author"
+      description: "Primary hunt author (name, team, or handle)."
+      placeholder: "jane.doe"
+    validations:
+      required: true
+
+  - type: input
+    id: created_date
+    attributes:
+      label: "created_date"
+      description: "Creation date (ISO 8601)."
+      placeholder: "2026-04-26"
+    validations:
+      required: true
+
+  - type: input
+    id: updated_date
+    attributes:
+      label: "updated_date"
+      description: "Last updated date (ISO 8601)."
+      placeholder: "2026-04-26"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: hunt_type
+    attributes:
+      label: "hunt_type"
+      description: "Select exactly one hunt type."
+      options:
+        - "Hypothesis-driven"
+        - "Baseline/EDA"
+        - "Model-Assisted/M-ATH"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: "status"
+      description: "Current lifecycle stage."
+      options:
+        - "draft"
+        - "triaged"
+        - "in_progress"
+        - "validated"
+        - "completed"
+        - "archived"
+        - "cancelled"
+        - "on_hold"
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ### ABLE Fields (required when `hunt_type` is `Hypothesis-driven`)
+        Fill these for hypothesis-driven hunts. For other hunt types, write `N/A`.
+
+  - type: textarea
+    id: able_actor
+    attributes:
+      label: "ABLE - Actor"
+      description: "Who is expected to perform the behavior? Include actor class (threat group, insider, malware family, unknown)."
+      placeholder: |
+        Example:
+        - Name: APT29
+        - Type: nation_state
+    validations:
+      required: true
+
+  - type: textarea
+    id: able_behavior
+    attributes:
+      label: "ABLE - Behavior"
+      description: "What specific behavior do you expect to observe? Include command, process, network, or identity activity."
+      placeholder: |
+        Example:
+        PowerShell launched with encoded command from winword.exe parent.
+    validations:
+      required: true
+
+  - type: textarea
+    id: able_location
+    attributes:
+      label: "ABLE - Location"
+      description: "Where should the behavior appear? Define environment, host scope, identity scope, and data source locations."
+      placeholder: |
+        Example:
+        Corporate Windows endpoints in Finance OU; EDR process telemetry.
+    validations:
+      required: true
+
+  - type: textarea
+    id: able_evidence
+    attributes:
+      label: "ABLE - Evidence"
+      description: "What evidence confirms or rejects the hypothesis? Include expected observables and validation criteria."
+      placeholder: |
+        Example:
+        Process tree and command-line evidence with suspicious parent-child chain.
+    validations:
+      required: true
+
+  - type: textarea
+    id: mitre_techniques
+    attributes:
+      label: "mitre_techniques"
+      description: "List MITRE ATT&CK technique IDs (one per line)."
+      placeholder: |
+        T1059.001
+        T1204
+    validations:
+      required: true
+
+  - type: textarea
+    id: mitre_tactics
+    attributes:
+      label: "mitre_tactics"
+      description: "List MITRE ATT&CK tactic IDs (TAxxxx) one per line for consistent dashboard lookup."
+      placeholder: |
+        TA0002
+        TA0001
+    validations:
+      required: true
+
+  - type: textarea
+    id: threat_actors
+    attributes:
+      label: "threat_actors (name + type list)"
+      description: "Provide YAML-like list entries containing `name` and `type`."
+      placeholder: |
+        - name: APT29
+          type: nation_state
+        - name: FIN7
+          type: cybercrime
+    validations:
+      required: true
+
+  - type: textarea
+    id: campaigns
+    attributes:
+      label: "campaigns"
+      description: "Known or suspected campaign names (one per line, or `none`)."
+      placeholder: |
+        Midnight Blizzard
+        none
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: data_sources
+    attributes:
+      label: "data_sources"
+      description: "Select approved organizational data source categories."
+      options:
+        - label: "endpoint_process"
+        - label: "endpoint_file"
+        - label: "endpoint_registry"
+        - label: "endpoint_network"
+        - label: "edr_alerts"
+        - label: "dns_logs"
+        - label: "proxy_logs"
+        - label: "firewall_logs"
+        - label: "identity_auth"
+        - label: "email_security"
+        - label: "cloud_audit"
+        - label: "saas_activity"
+    validations:
+      required: true
+
+  - type: textarea
+    id: data_sources_other
+    attributes:
+      label: "data_sources_other (optional)"
+      description: "Only if needed: propose additional data source values not listed above (one per line)."
+      placeholder: |
+        ot_network_telemetry
+        application_runtime_events
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ### Data Source -> Location Mapping Hints
+        Use these examples to keep source/location pairings consistent:
+
+        - `edr_alerts` -> `EDR platform`
+        - `endpoint_process`, `endpoint_file`, `endpoint_registry` -> `EDR platform` or `Endpoint local logs (manual collection)`
+        - `dns_logs`, `proxy_logs`, `firewall_logs` -> `SIEM` or `Data lake / warehouse`
+        - `identity_auth` -> `Identity provider console` or `SIEM`
+        - `cloud_audit`, `saas_activity` -> `Cloud provider logs`, `SaaS security platform`, or `Data lake / warehouse`
+
+  - type: checkboxes
+    id: data_source_locations
+    attributes:
+      label: "data_source_locations"
+      description: "Select where the chosen data sources are stored/queried/collected."
+      options:
+        - label: "SIEM"
+        - label: "EDR platform"
+        - label: "Data lake / warehouse"
+        - label: "NDR platform"
+        - label: "SOAR case system"
+        - label: "Cloud provider logs"
+        - label: "SaaS security platform"
+        - label: "Endpoint local logs (manual collection)"
+        - label: "Server local logs (manual collection)"
+        - label: "Identity provider console"
+    validations:
+      required: true
+
+  - type: textarea
+    id: data_source_locations_other
+    attributes:
+      label: "data_source_locations_other (optional)"
+      description: "Only if needed: propose additional data location values not listed above (one per line)."
+      placeholder: |
+        OT historian
+        Proprietary telemetry API
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: query_languages
+    attributes:
+      label: "query_languages"
+      description: "Select approved organizational query languages/tools."
+      options:
+        - label: "KQL"
+        - label: "SPL"
+        - label: "SQL"
+        - label: "EQL"
+        - label: "YARA-L"
+        - label: "Sigma"
+        - label: "Python"
+        - label: "Bash"
+        - label: "PowerShell"
+        - label: "Velociraptor VQL"
+        - label: "XQL"
+    validations:
+      required: true
+
+  - type: textarea
+    id: query_languages_other
+    attributes:
+      label: "query_languages_other (optional)"
+      description: "Only if needed: propose additional query language/tool values not listed above (one per line)."
+      placeholder: |
+        MQL
+        Grep pipeline
+    validations:
+      required: false
+
+  - type: textarea
+    id: outcomes
+    attributes:
+      label: "outcomes"
+      description: "Describe expected and/or observed outcomes, including next actions."
+      placeholder: |
+        Example:
+        - expected: detect suspicious encoded PowerShell launched via Office
+        - observed: 2 true positives, 4 benign admin scripts
+        - action: add analytic tuning and create detection ticket
+    validations:
+      required: true
+
+  - type: textarea
+    id: narrative
+    attributes:
+      label: "Narrative / Full Documentation"
+      description: "Paste full PEAK documentation here. Include Prepare, Execute, Act, and Knowledge phases."
+      placeholder: |
+        ## Prepare
+        (scope, hypothesis, assumptions, prerequisites)
+
+        ## Execute
+        (queries, logic, tuning, validation steps)
+
+        ## Act
+        (findings, response actions, detection updates)
+
+        ## Knowledge
+        (lessons learned, reusable guidance, follow-up hunts)
+      render: markdown
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: "Template Compliance Confirmation"
+      description: "Confirm this submission follows the intended template workflow."
+      options:
+        - label: "I completed required metadata fields for draft hunt frontmatter generation."
+          required: true
+        - label: "If this is Hypothesis-driven, I completed ABLE fields with meaningful detail."
+          required: true
+        - label: "I provided PEAK narrative content (Prepare, Execute, Act, Knowledge)."
+          required: true
+        - label: "I understand this issue body will be used later to create a draft hunt file."
+          required: true

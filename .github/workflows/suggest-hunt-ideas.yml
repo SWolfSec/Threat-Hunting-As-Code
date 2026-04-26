@@ -1,0 +1,86 @@
+name: Suggest Hunt Ideas
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_or_hunt:
+        description: "Issue number (e.g., #42) or hunt title/context"
+        required: true
+        type: string
+      hunt_type:
+        description: "Optional hunt type focus"
+        required: false
+        default: "Hypothesis-driven"
+        type: choice
+        options:
+          - Hypothesis-driven
+          - Baseline/EDA
+          - Model-Assisted/M-ATH
+      data_sources:
+        description: "Optional data source constraint (matches New Hunt issue template taxonomy)"
+        required: false
+        default: "any"
+        type: choice
+        options:
+          - any
+          - endpoint_process
+          - endpoint_file
+          - endpoint_registry
+          - endpoint_network
+          - edr_alerts
+          - dns_logs
+          - proxy_logs
+          - firewall_logs
+          - identity_auth
+          - email_security
+          - cloud_audit
+          - saas_activity
+
+jobs:
+  print-prompt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print ready-to-copy LLM prompt
+        shell: bash
+        run: |
+          echo "----- READY-TO-COPY PROMPT START -----"
+          cat <<'EOF'
+          You are a senior threat hunter helping generate hunt ideas from a PEAK Prepare phase input.
+
+          Context:
+          - Issue or hunt context: "${{ github.event.inputs.issue_or_hunt }}"
+          - Preferred hunt type: "${{ github.event.inputs.hunt_type }}"
+          - Data source constraint (template-aligned): "${{ github.event.inputs.data_sources }}"
+
+          Task:
+          Generate 5 high-quality hunt ideas. For each idea, provide:
+          1) Hunt title
+          2) Hunt type (Hypothesis-driven, Baseline/EDA, or Model-Assisted/M-ATH)
+          3) Prepare section draft:
+             - Objective
+             - Scope (environment, assets/users, timeframe)
+             - Assumptions & prerequisites
+             - Success criteria
+          4) ABLE mapping (required when Hypothesis-driven):
+             - Actor
+             - Behavior
+             - Location
+             - Evidence
+          5) Candidate MITRE mappings:
+             - Techniques (Txxxx)
+             - Tactics (TAxxxx)
+          6) Minimum required data_sources and data_source_locations
+          7) Recommended query_languages
+          8) Expected outcomes:
+             - detection opportunity
+             - prevention opportunity
+             - visibility created
+
+          Constraints:
+          - Be specific, realistic, and enterprise-ready.
+          - Avoid vague statements and generic attacker behavior.
+          - Prefer ideas with measurable success criteria.
+          - If a specific data source is provided (not "any"), prioritize ideas executable with that source.
+          - Output in clean markdown and include a short prioritization rationale.
+          EOF
+          echo "----- READY-TO-COPY PROMPT END -----"
