@@ -9,7 +9,7 @@ Traditional hunt tracking often lives in spreadsheets, one-off notes, or disconn
 Threat-Hunting-As-Code standardizes hunts so teams can:
 
 - Reuse proven hypotheses and query logic
-- Review hunts with security and engineering rigor
+- Perform thorough reviews with proper accountability
 - Measure coverage, cadence, and outcomes over time
 - Scale analyst knowledge across teams and time zones
 
