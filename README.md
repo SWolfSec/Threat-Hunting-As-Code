@@ -131,6 +131,21 @@ Add screenshots here once your first dashboard run is generated:
 - **Extensible architecture**: parser and dashboard scripts are modular so future AI-assisted enrichments can be added behind optional workflows.
 - **Future AI-ready**: `suggest-hunt-ideas.yml` is currently prompt-only (no API calls) and can be upgraded later to optional provider-backed runs.
 
+## Acknowledgments and Attribution
+
+This project builds on established community and industry frameworks. Credit where it is due:
+
+- **PEAK Threat Hunting Framework** (`Prepare`, `Execute`, `Act with Knowledge`) and **ABLE** (`Actor`, `Behavior`, `Location`, `Evidence`) are credited to **Splunk SURGe** and related Splunk Security research/publications.
+- **MITRE ATT&CK** tactic/technique taxonomy is created and maintained by **MITRE**; this repository uses ATT&CK IDs for normalized reporting and analytics.
+- Markdown dashboard rendering patterns use **Mermaid** syntax and GitHub-native Markdown capabilities.
+
+Primary references:
+
+- [Introducing the PEAK Threat Hunting Framework (Splunk)](https://www.splunk.com/en_us/blog/security/peak-threat-hunting-framework.html)
+- [Hypothesis-Driven Hunting with the PEAK Framework (Splunk)](https://www.splunk.com/en_us/blog/security/peak-hypothesis-driven-threat-hunting.html)
+- [MITRE ATT&CK](https://attack.mitre.org/)
+- [Mermaid](https://mermaid.js.org/)
+
 ## Contribution Model
 
 - Use issues for hunt intake and discussion.
