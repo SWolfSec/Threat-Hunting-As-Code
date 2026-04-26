@@ -50,6 +50,14 @@ This project supports multiple hunt classes so teams can balance proactive and r
 
 After that, open a PR: CI validates hunt + campaign metadata; when merged, metrics refresh `docs/dashboard.md` and auto-update each campaign file’s **Linked hunts** and **Aggregated outcomes** sections.
 
+### Issue submission auto-bootstrap
+
+When a hunter submits **New Threat Hunt** or **New Campaign** intake issues, `.github/workflows/bootstrap-from-issue.yml` automatically:
+
+1. Parses issue-form answers
+2. Generates a draft file from the matching template (`hunts/` or `campaigns/`)
+3. Opens a PR with the generated artifact prefilled so the hunter can immediately refine content
+
 ### First hunt checklist (after the umbrella exists)
 
 1. Open GitHub Issues and select **New Threat Hunt**.
