@@ -6,7 +6,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
   issues: write
 
 jobs:
@@ -37,39 +36,36 @@ jobs:
             --repo-root "$GITHUB_WORKSPACE" \
             --output-file "$GITHUB_OUTPUT"
 
-      - name: Create pull request with generated draft
+      - name: Create and push draft branch
         if: steps.bootstrap.outputs.created == 'true'
-        id: create_pr
-        uses: peter-evans/create-pull-request@v6
-        with:
-          branch: ${{ steps.bootstrap.outputs.branch }}
-          title: "chore: bootstrap draft from issue #${{ github.event.issue.number }}"
-          commit-message: "chore: bootstrap draft from issue #${{ github.event.issue.number }}"
-          body: |
-            Auto-generated draft artifact from issue #${{ github.event.issue.number }}.
+        run: |
+          BRANCH="${{ steps.bootstrap.outputs.branch }}"
+          FILE="${{ steps.bootstrap.outputs.file }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add "$FILE"
+          git commit -m "chore: bootstrap draft from issue #${{ github.event.issue.number }}"
+          git push -u origin "$BRANCH"
 
-            Generated file:
-            - `${{ steps.bootstrap.outputs.file }}`
-
-            The file follows project templates and is intended for analyst refinement.
-          labels: |
-            automation
-            draft-generated
-
-      - name: Comment with generated PR link
-        if: steps.bootstrap.outputs.created == 'true' && steps.create_pr.outputs.pull-request-url != ''
+      - name: Comment with branch and next steps
+        if: steps.bootstrap.outputs.created == 'true'
         uses: actions/github-script@v7
         with:
           script: |
-            const url = `${{ steps.create_pr.outputs.pull-request-url }}`;
             const file = `${{ steps.bootstrap.outputs.file }}`;
+            const branch = `${{ steps.bootstrap.outputs.branch }}`;
+            const repoUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}`;
+            const compareUrl = `${repoUrl}/compare/${branch}?expand=1`;
             const body = [
-              `Draft artifact created and opened as a PR: ${url}`,
+              `Draft artifact generated on branch \`${branch}\`.`,
               ``,
               `Generated file: \`${file}\``,
               ``,
-              `You can now continue directly in that PR.`
-            ].join('\n');
+              `Next steps for hunter:`,
+              `1. Review/refine the draft on branch \`${branch}\``,
+              `2. Open a PR when ready: ${compareUrl}`,
+            ].join('\\n');
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
