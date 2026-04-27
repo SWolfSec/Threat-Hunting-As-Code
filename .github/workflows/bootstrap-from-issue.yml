@@ -38,8 +38,10 @@ jobs:
 
       - name: Create and push draft branch
         if: steps.bootstrap.outputs.created == 'true'
+        id: push_branch
         run: |
-          BRANCH="${{ steps.bootstrap.outputs.branch }}"
+          BASE_BRANCH="${{ steps.bootstrap.outputs.branch }}"
+          BRANCH="${BASE_BRANCH}-${{ github.run_id }}-${{ github.run_attempt }}"
           FILE="${{ steps.bootstrap.outputs.file }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -47,6 +49,7 @@ jobs:
           git add "$FILE"
           git commit -m "chore: bootstrap draft from issue #${{ github.event.issue.number }}"
           git push -u origin "$BRANCH"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
       - name: Comment with branch and next steps
         if: steps.bootstrap.outputs.created == 'true'
@@ -54,7 +57,7 @@ jobs:
         with:
           script: |
             const file = `${{ steps.bootstrap.outputs.file }}`;
-            const branch = `${{ steps.bootstrap.outputs.branch }}`;
+            const branch = `${{ steps.push_branch.outputs.branch }}`;
             const repoUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}`;
             const compareUrl = `${repoUrl}/compare/${branch}?expand=1`;
             const body = [
