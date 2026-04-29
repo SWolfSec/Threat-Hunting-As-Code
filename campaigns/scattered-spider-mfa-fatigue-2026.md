@@ -117,3 +117,4 @@ Stable links, report titles, or internal ticket IDs (one per line). Prefer publi
 - Okta Threat Intelligence Blog – “MFA Fatigue Attacks Surge” (April 2026)
 - Microsoft Threat Intelligence – UNC3944 TTP update (March 2026)
 - Internal incident reports from two peer organizations (shared via ISAC)
+```
