@@ -4,7 +4,7 @@ campaign_slug: "scattered-spider-mfa-fatigue-2026"
 threat_actor_type: "cybercrime"
 threat_actor_name: "Scattered Spider (UNC3944)"
 start_date: "2026-03-01"
-end_date: "_No response_"
+end_date: null
 description: "Ongoing Scattered Spider campaign using MFA push bombing, MFA fatigue, and social engineering of helpdesk staff to bypass MFA and gain initial access to corporate environments. Targets include Okta, Entra ID, and SaaS applications. Goal is credential access followed by ransomware deployment or data exfiltration."
 mitre_tactics:
   - "TA0001"
@@ -25,10 +25,10 @@ status: "draft"
 
 | Field | Value |
 | --- | --- |
-| **Slug** | `replace-with-kebab-case-slug` |
+| **Slug** | `scattered-spider-mfa-fatigue-2026` |
 | **Status** | `draft` |
-| **Window** | `YYYY-MM-DD` → _ongoing or end date_ |
-| **Primary actor** | `Unknown` (`unknown`) |
+| **Window** | `2026-03-01` → _ongoing_ |
+| **Primary actor** | `Scattered Spider (UNC3944)` (`cybercrime`) |
 
 ---
 
@@ -36,6 +36,7 @@ status: "draft"
 
 ```markdown
 ## Context
+
 Scattered Spider (UNC3944) is a financially motivated threat group known for aggressive social engineering and living-off-the-land techniques. As of April 2026 they remain one of the most active initial-access brokers feeding ransomware operations.
 
 ## Scope
@@ -52,7 +53,7 @@ This campaign focuses on MFA fatigue / push bombing against contractor and emplo
 - Always verify caller identity with a secondary channel (e.g. known phone number or manager confirmation). 
 - Pay special attention to contractor/vendor accounts — they are the current sweet spot. 
 - Document any new helpdesk scripts or verification steps created as a result of hunts.
-```
+
 
 ---
 
@@ -62,10 +63,10 @@ High-level attribution and motivation only — not hunt hypotheses.
 
 | Topic | Notes |
 | --- | --- |
-| **Actor name / cluster** | |
-| **Actor type** | |
+| **Actor name / cluster** | Scattered Spider (UNC3944) |
+| **Actor type** | cybercrime |
 | **Confidence** | low / medium / high (qualitative) |
-| **Known TTP themes** | bullet list at narrative level only |
+| **Known TTP themes** | TA0001, TA0006, TA0008, T1556.004, T1621, T1199, T1566.002 |
 
 ---
 
@@ -75,8 +76,9 @@ What this **umbrella** should achieve for the program (not per-hunt execution st
 
 | Objective | Success signal (umbrella-level) |
 | --- | --- |
-| Example: align hunt backlog to campaign TTPs | Backlog items tagged with this `campaign_slug` |
-| Example: improve leadership visibility | Quarterly rollup references this campaign |
+| Ongoing Scattered Spider MFA fatigue and helpdesk social engineering tracked under this umbrella (identity and SaaS abuse). | _(define a measurable success signal)_ |
+| Align hunt backlog and telemetry to campaign TTPs (MFA abuse, helpdesk bypass, initial access). | Backlog items tagged with this `campaign_slug` |
+| Leadership-ready reporting on campaign-linked hunt progress and coverage. | Quarterly rollup references this campaign |
 
 ---
 
@@ -111,4 +113,7 @@ What this **umbrella** should achieve for the program (not per-hunt execution st
 
 Stable links, report titles, or internal ticket IDs (one per line). Prefer public URLs when sharing outside the team.
 
-- 
+- CrowdStrike Global Threat Report Q1 2026
+- Okta Threat Intelligence Blog – “MFA Fatigue Attacks Surge” (April 2026)
+- Microsoft Threat Intelligence – UNC3944 TTP update (March 2026)
+- Internal incident reports from two peer organizations (shared via ISAC)
