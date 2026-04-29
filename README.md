@@ -48,7 +48,7 @@ This project supports multiple hunt classes so teams can balance proactive and r
 1. **Create a campaign** using the GitHub issue form **New Campaign**, then add the approved umbrella under `campaigns/<campaign_slug>.md` using `templates/campaign-template.md` (set `campaign_slug` to a unique kebab-case value).
 2. **Create individual hunts** under `hunts/` and link them to the umbrella by setting **`campaign_slugs`** (preferred) and/or a kebab-case entry in **`campaigns`** that exactly matches the campaign’s `campaign_slug`. Standalone hunts can keep `campaigns: ["none"]` and omit `campaign_slugs`.
 
-After that, open a PR: CI validates hunt + campaign metadata; when merged, metrics refresh `docs/dashboard.md` and auto-update each campaign file’s **Linked hunts** and **Aggregated outcomes** sections.
+After that, open a PR (manually): CI validates hunt + campaign metadata; when merged, metrics refresh `docs/dashboard.md` and auto-update each campaign file’s **Linked hunts** and **Aggregated outcomes** sections.
 
 ### Issue submission auto-bootstrap
 
@@ -56,7 +56,7 @@ When a hunter submits **New Threat Hunt** or **New Campaign** intake issues, `.g
 
 1. Parses issue-form answers
 2. Generates a draft file from the matching template (`hunts/` or `campaigns/`)
-3. Opens a PR with the generated artifact prefilled so the hunter can immediately refine content
+3. Creates a unique branch with a commit containing the generated artifact so the hunter can review/refine before submitting a PR
 
 ### First hunt checklist (after the umbrella exists)
 
@@ -64,7 +64,7 @@ When a hunter submits **New Threat Hunt** or **New Campaign** intake issues, `.g
 2. Fill in required metadata (hunt type, MITRE IDs, data sources/locations, query languages, outcomes).
 3. Set **`campaign_slugs: ["your-campaign-slug"]`** (or use a matching kebab-case `campaigns` entry) so the hunt rolls up under the campaign.
 4. Copy `templates/hunt-template.md` into `hunts/<your-hunt>.md` and complete PEAK + at least one `threat-hunt-query` block.
-5. Open a PR to `main`; validation fails if required fields or unknown `campaign_slug` references are missing.
+5. Open a PR to `main` from your generated/working branch after review; validation fails if required fields or unknown `campaign_slug` references are missing.
 6. After merge, the metrics job regenerates the dashboard and updates linked campaign sections.
 
 ## Submit a New Hunt (via Issues)
@@ -73,7 +73,7 @@ When a hunter submits **New Threat Hunt** or **New Campaign** intake issues, `.g
 2. Complete all required fields (hypothesis, data sources, ATT&CK mapping, impact, and owner).
 3. Submit the issue for triage and assignment.
 4. Convert approved issues into a hunt artifact using `templates/hunt-template.md`.
-5. Open a pull request with the hunt content and supporting logic/queries.
+5. Review the generated or working branch and then open a pull request with the hunt content and supporting logic/queries.
 
 ### Hunt Submission Expectations
 

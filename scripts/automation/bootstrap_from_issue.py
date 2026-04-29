@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
-"""Create draft hunt/campaign files from GitHub Issue Forms.
+"""Bootstrap hunt/campaign markdown from a GitHub Issues event.
 
-Reads the GitHub event payload (issues event), parses issue form markdown answers,
-and generates a draft artifact from the existing markdown templates.
+Intended to run in Actions: read $GITHUB_EVENT_PATH, pull answers out of the
+issue body (issue forms render as markdown with ### headings), then write a
+new file under hunts/ or campaigns/ from the repo templates.
+
+Not a general-purpose issue parser as it only needs to match our own forms.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 from pathlib import Path
 from typing import Any
 
 
+# Issue forms dump each answer under a ### label line to split on.
 HEADING_RE = re.compile(r"^###\s+(.*)\s*$")
 KEBAB_RE = re.compile(r"[^a-z0-9]+")
 
@@ -28,6 +31,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def slugify(text: str) -> str:
+    # Safe filename stem same rules we use for campaign_slug in the parser.
     s = KEBAB_RE.sub("-", text.strip().lower()).strip("-")
     return s or "draft"
 
@@ -47,6 +51,7 @@ def parse_form_sections(body: str) -> dict[str, str]:
 
 
 def parse_checkbox_values(text: str) -> list[str]:
+    # Checkbox answers show up as `- [x] label` when checked but keep a fallback for plain bullets.
     vals: list[str] = []
     for line in text.splitlines():
         s = line.strip()
@@ -77,6 +82,7 @@ def parse_line_values(text: str) -> list[str]:
 
 
 def parse_threat_actor_maps(text: str) -> list[dict[str, str]]:
+    # Loose parser for the YAML-ish block hunters paste in the form. Good enough for drafts.
     actors: list[dict[str, str]] = []
     current: dict[str, str] | None = None
     for line in text.splitlines():
@@ -113,6 +119,7 @@ def split_frontmatter(template: str) -> tuple[str, str]:
 
 
 def yaml_quote(value: str) -> str:
+    # Double-quoted scalars only this keeps the script free of a yaml emitter dependency.
     escaped = value.replace("\\", "\\\\").replace('"', '\\"')
     return f'"{escaped}"'
 
@@ -127,6 +134,7 @@ def emit_yaml_list(values: list[str], indent: int = 0) -> str:
 def render_hunt_frontmatter(fields: dict[str, str], issue_num: int) -> str:
     title = fields.get("title") or f"Issue {issue_num} Hunt Draft"
     campaigns = parse_line_values(fields.get("campaigns", "none")) or ["none"]
+    # If they put a kebab slug in `campaigns`, mirror it into campaign_slugs for metrics linking.
     campaign_slugs = [c for c in campaigns if re.match(r"^[a-z0-9]+(?:-[a-z0-9]+)*$", c)]
     data_sources = parse_checkbox_values(fields.get("data_sources", ""))
     data_sources += parse_line_values(fields.get("data_sources_other (optional)", ""))
@@ -189,6 +197,7 @@ def render_campaign_frontmatter(fields: dict[str, str], issue_num: int) -> str:
         or title
     )
     all_mitre = parse_line_values(fields.get("overall_mitre_tactics_and_techniques", ""))
+    # Form mixes TA and T in one box.. split so frontmatter matches campaign-template shape.
     tactics = [v.upper() for v in all_mitre if v.upper().startswith("TA")]
     techniques = [v for v in all_mitre if v.upper().startswith("T") and not v.upper().startswith("TA")]
     lines = [
@@ -216,6 +225,7 @@ def render_campaign_frontmatter(fields: dict[str, str], issue_num: int) -> str:
 
 
 def write_outputs(out_path: Path | None, **kwargs: str) -> None:
+    # GITHUB_OUTPUT is key=value lines, workflow steps read these as outputs.
     if out_path is None:
         return
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -231,6 +241,92 @@ def has_required_fields(form: dict[str, str], required: list[str]) -> bool:
     return True
 
 
+def hunt_draft_banner(issue_num: int) -> str:
+    return "\n".join(
+        [
+            "> [!IMPORTANT] **Draft hunt (bootstrap)**",
+            "> ",
+            "> **Prefilled from intake** (issue form → YAML frontmatter above, plus any **Imported Intake Narrative** section below):",
+            "> - metadata fields used for dashboards and linking",
+            "> ",
+            "> **You still need to complete** (this template body is mostly guidance until you replace it):",
+            "> - PEAK sections with real operational detail",
+            "> - at least one working `threat-hunt-query` block (replace the example placeholder if needed)",
+            "> - `threat-hunt-ioc` blocks when indicators exist",
+            "> - validation notes, findings, and outcomes as the hunt progresses",
+            "> ",
+            f"> _Generated from GitHub issue #{issue_num}. Remove this callout when the hunt is ready for formal review._",
+            "",
+        ]
+    )
+
+
+def campaign_draft_banner(issue_num: int) -> str:
+    return "\n".join(
+        [
+            "> [!IMPORTANT] **Draft campaign umbrella (bootstrap)**",
+            "> ",
+            "> **Prefilled from intake** (issue form → YAML frontmatter above, plus **Campaign overview** if imported):",
+            "> - umbrella metadata for reporting and hunt linkage",
+            "> ",
+            "> **You still need to complete** (high-level only — no hunt queries here):",
+            "> - Threat actor context table (confidence, themes)",
+            "> - umbrella objectives table (measurable success signals)",
+            "> - references list (stable links / ticket IDs)",
+            "> ",
+            f"> _Generated from GitHub issue #{issue_num}. Remove this callout when the umbrella is ready for formal review._",
+            "",
+        ]
+    )
+
+
+def annotate_after_heading(markdown: str, heading: str, note: str) -> str:
+    # First match only the headings are unique in our templates.
+    needle = heading
+    if needle not in markdown:
+        return markdown
+    return markdown.replace(needle, needle + "\n\n" + note.strip() + "\n", 1)
+
+
+def annotate_hunt_markdown(markdown_body: str, issue_num: int) -> str:
+    lines = markdown_body.splitlines()
+    if lines:
+        insert_at = 1 if len(lines) > 1 else len(lines)
+        lines.insert(insert_at, hunt_draft_banner(issue_num))
+        markdown_body = "\n".join(lines)
+
+    todo = "<!-- HUNTER TODO: replace placeholder guidance with real hunt content -->"
+    markdown_body = annotate_after_heading(markdown_body, "## 🟦 Prepare", todo)
+    markdown_body = annotate_after_heading(markdown_body, "## 🟨 Execute", todo)
+    markdown_body = annotate_after_heading(markdown_body, "## 🟥 Act", todo)
+    markdown_body = annotate_after_heading(markdown_body, "## 🟩 Knowledge", todo)
+    markdown_body = annotate_after_heading(
+        markdown_body,
+        "### 2) Queries (Parser-Extractable)",
+        "<!-- HUNTER TODO: replace example query blocks with real hunt queries -->",
+    )
+    markdown_body = annotate_after_heading(
+        markdown_body,
+        "### 3) IOCs (Parser-Extractable)",
+        "<!-- HUNTER TODO: add IOC blocks when applicable (or note none observed) -->",
+    )
+    return markdown_body
+
+
+def annotate_campaign_markdown(markdown_body: str, issue_num: int) -> str:
+    lines = markdown_body.splitlines()
+    if lines:
+        insert_at = 1 if len(lines) > 1 else len(lines)
+        lines.insert(insert_at, campaign_draft_banner(issue_num))
+        markdown_body = "\n".join(lines)
+
+    todo = "<!-- HUNTER TODO: complete this umbrella section (high-level only) -->"
+    markdown_body = annotate_after_heading(markdown_body, "## 🎭 Threat Actor Context", todo)
+    markdown_body = annotate_after_heading(markdown_body, "## 🎯 High-level Objectives", todo)
+    markdown_body = annotate_after_heading(markdown_body, "## 📚 References", todo)
+    return markdown_body
+
+
 def main() -> int:
     args = parse_args()
     event = json.loads(args.event_path.read_text(encoding="utf-8"))
@@ -239,6 +335,7 @@ def main() -> int:
     issue_body = issue.get("body", "") or ""
     issue_num = int(issue.get("number", 0))
 
+    # Workflow should gate labels, but we still defensively branch here.
     form = parse_form_sections(issue_body)
     repo_root = args.repo_root.resolve()
 
@@ -266,8 +363,10 @@ def main() -> int:
         if narrative:
             markdown_body += (
                 "\n\n---\n\n## Imported Intake Narrative\n\n"
-                f"_Source: issue #{issue_num}_\n\n{narrative}\n"
+                f"> **Prefilled from issue form** (issue #{issue_num}). Treat as raw intake; refine into PEAK sections above as the hunt matures.\n\n"
+                f"{narrative}\n"
             )
+        markdown_body = annotate_hunt_markdown(markdown_body, issue_num)
         hunt_id = form.get("hunt_id", "").strip()
         file_stem = slugify(hunt_id if hunt_id and "YYYY" not in hunt_id else title)
         target = repo_root / "hunts" / f"{file_stem}.md"
@@ -289,9 +388,10 @@ def main() -> int:
         if overview:
             markdown_body = markdown_body.replace(
                 "## 📋 Campaign Overview\n\nSummarize the **campaign umbrella** in plain language: what threat activity or narrative this grouping represents, why it exists as a container, and what time horizon or business context applies.\n\n- **Narrative (2–4 sentences)**:\n- **Scope boundaries** (what is intentionally *out* of this umbrella):\n- **Relationship to intelligence** (public reporting, IR themes, sector trends — no paste of classified or sensitive operational detail):",
-                f"## 📋 Campaign Overview\n\n{overview}",
+                f"## 📋 Campaign Overview\n\n> **Prefilled from issue form** (issue #{issue_num}). Expand/refine scope and sourcing notes below as the umbrella matures.\n\n{overview}",
                 1,
             )
+        markdown_body = annotate_campaign_markdown(markdown_body, issue_num)
         slug = slugify(form.get("campaign_slug (canonical)", "").strip() or title)
         target = repo_root / "campaigns" / f"{slug}.md"
     else:
@@ -302,6 +402,7 @@ def main() -> int:
         write_outputs(args.output_file, created="false", reason="already_exists", file=str(target))
         return 0
 
+    # If this file already exists, stop and don't overwrite what someone already edited.
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(fm + "\n" + markdown_body.lstrip("\n"), encoding="utf-8")
     rel = target.relative_to(repo_root).as_posix()

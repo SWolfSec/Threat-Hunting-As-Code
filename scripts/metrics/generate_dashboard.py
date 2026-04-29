@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
 """
-Generate a markdown dashboard from hunt metrics JSON.
+Build docs/dashboard.md from hunt_metrics_summary.json.
 
-Input JSON is expected to match the structure emitted by
-`scripts/metrics/parse_hunts.py`.
+Builds markdown as plain strings. Mermaid goes in fenced blocks so GitHub can
+render charts where it supports them.
 
-Output:
-- Markdown report at `docs/dashboard.md` by default
-- Mermaid charts embedded as fenced markdown blocks
-
-Dependencies: Python stdlib only.
+Expects the JSON shape from parse_hunts.py. Extra keys are ignored.
 """
 
 from __future__ import annotations
@@ -52,7 +48,7 @@ def pct(numerator: int, denominator: int) -> float:
 
 def to_sorted_items(counter_like: dict[str, Any]) -> list[tuple[str, int]]:
     normalized = [(str(k), int(v)) for k, v in counter_like.items()]
-    # Sort by count desc, then key asc for deterministic output.
+    # Stable order.. high counts first, then key name.
     return sorted(normalized, key=lambda t: (-t[1], t[0]))
 
 
@@ -73,7 +69,7 @@ def mermaid_bar(title: str, items: list[tuple[str, int]]) -> str:
     x_labels = [label for label, _ in items]
     y_vals = [value for _, value in items]
 
-    # xychart-beta is widely supported by Mermaid renderers in markdown.
+    # xychart-beta usually works in GitHub Mermaid.
     quoted_labels = ", ".join(f'"{x}"' for x in x_labels)
 
     return "\n".join(
@@ -187,17 +183,10 @@ def build_active_campaigns_section(payload: dict[str, Any]) -> str:
 
 
 def build_recent_hunts_table(payload: dict[str, Any]) -> str:
-    """
-    Build recent hunts table.
-
-    parse_hunts.py currently does not guarantee detailed per-hunt rows in JSON.
-    This section gracefully handles both:
-    - payload["hunts"] as list of dicts (if present in future)
-    - no hunt rows available (renders placeholder guidance)
-    """
+    """Last few hunts from the hunts array in the JSON, if present."""
     hunts = payload.get("hunts", [])
     if isinstance(hunts, list) and hunts:
-        # Try common keys and keep table concise.
+        # Show at most 10 rows. Last Updated uses updated_date, else created_date.
         rows = []
         for h in hunts[:10]:
             if not isinstance(h, dict):
@@ -349,6 +338,7 @@ def build_dashboard(payload: dict[str, Any]) -> str:
     metrics = payload.get("metrics", {})
     generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
+    # Put campaigns up top, then totals, then charts. Easier to scan.
     parts = [
         "# Threat Hunt Dashboard",
         "",
@@ -377,6 +367,7 @@ def main() -> int:
         raise FileNotFoundError(f"Input JSON not found: {input_path}")
 
     payload = read_json(input_path)
+    # This file lives in scripts/metrics/, repo root is two parents up.
     repo_root = Path(__file__).resolve().parents[2]
     output_path = (args.output or (repo_root / "docs" / "dashboard.md")).resolve()
     output_path.parent.mkdir(parents=True, exist_ok=True)

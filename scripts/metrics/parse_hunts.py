@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 """
-Parse hunt and campaign markdown files and compute program metrics.
+Parse hunt and campaign markdown, validate, write metrics JSON, update campaign stubs.
 
-Behavior:
-- Recursively scan `hunts/` and `campaigns/` for markdown files
-- Parse YAML frontmatter; hunts also extract ```threat-hunt-query / ```threat-hunt-ioc blocks
-- Validate hunt + campaign required fields
-- Link hunts to campaigns via `campaign_slugs` and/or kebab-case `campaigns` entries matching a real `campaign_slug`
-- Validate every referenced `campaign_slug` exists under `campaigns/`
-- Aggregate child-hunt metrics per campaign; update auto-regions in campaign markdown
-- Write combined JSON summary and invoke `generate_dashboard.py`
+CI calls this to scan hunts/ and campaigns/, write hunt_metrics_summary.json,
+optionally rewrite the auto tables in campaign markdown (between HTML comment
+markers), then run generate_dashboard.py.
 
-Dependencies: stdlib + PyYAML only.
+Outcome keywords are regex heuristics for dashboards, not a formal taxonomy.
 """
 
 from __future__ import annotations
@@ -63,7 +58,7 @@ AUTO_LINKED_END = "<!-- auto:linked-hunts:end -->"
 AUTO_OUTCOMES_START = "<!-- auto:aggregated-outcomes:start -->"
 AUTO_OUTCOMES_END = "<!-- auto:aggregated-outcomes:end -->"
 
-# Outcome keyword patterns (shared: hunt-level metrics + campaign child rollups).
+# Outcome keyword patterns (shared hunt-level metrics + campaign child rollups).
 DETECTION_RE = re.compile(r"\bdetect(ion|ed|s)?\b", re.IGNORECASE)
 PREVENTION_RE = re.compile(r"\bprevent(ion|ed|s)?\b", re.IGNORECASE)
 VISIBILITY_RE = re.compile(
@@ -216,7 +211,7 @@ def quarter_key(d: date) -> str:
 
 
 def hunt_date_for_activity(fm: dict[str, Any]) -> date | None:
-    """Best-effort activity date for rollups (prefer updated_date)."""
+    """Date for rollups: updated_date if valid, else created_date."""
     for key in ("updated_date", "created_date"):
         v = fm.get(key)
         if isinstance(v, str) and v.strip():
@@ -303,7 +298,11 @@ def validate_hunt(record: HuntRecord) -> None:
 def collect_hunt_campaign_slug_refs(
     record: HuntRecord, known_slugs: set[str]
 ) -> None:
-    """Populate `linked_campaign_slugs` and append errors for unknown slug references."""
+    """Link hunts to campaigns and record errors for bad slugs.
+
+    Uses campaign_slugs in frontmatter, plus kebab-case entries in the legacy
+    campaigns list. Legacy entries only count if they match a real campaign_slug.
+    """
     fm = record.frontmatter
     path = record.path
     linked: set[str] = set()
@@ -388,6 +387,7 @@ def parse_campaign_file(path: Path) -> CampaignRecord:
 # --- Campaign markdown auto-update ---
 
 def replace_autogen_region(content: str, start_marker: str, end_marker: str, inner: str) -> str:
+    # If markers are missing, leave the file unchanged.
     if start_marker not in content or end_marker not in content:
         return content
     before, rest = content.split(start_marker, 1)
@@ -457,9 +457,10 @@ def update_campaign_file(repo_root: Path, campaign: CampaignRecord, linked_hunts
     return False
 
 
-# --- Metrics (hunts only, unchanged semantics) ---
+# --- Hunt metrics for the dashboard JSON ---
 
 def compute_metrics(valid_records: list[HuntRecord]) -> dict[str, Any]:
+    """Aggregate hunt-level counters and totals."""
     total_hunts = len(valid_records)
 
     hunts_by_quarter: Counter[str] = Counter()
@@ -529,6 +530,7 @@ def compute_metrics(valid_records: list[HuntRecord]) -> dict[str, Any]:
         hunt_has_prevention = False
         hunt_has_visibility = False
         for out in outcomes:
+            # One hunt can increment line counts several times, hunt flags are once per hunt.
             if DETECTION_RE.search(out):
                 outcome_category_counts["detections"] += 1
                 hunt_has_detection = True
@@ -604,7 +606,7 @@ def compute_metrics(valid_records: list[HuntRecord]) -> dict[str, Any]:
 
 
 def aggregate_campaign_stats(linked: list[HuntRecord]) -> dict[str, Any]:
-    """Roll up child hunt metrics for one campaign."""
+    """Aggregate metrics from hunts linked to one campaign."""
     all_tactics: set[str] = set()
     all_techniques: set[str] = set()
     last_dates: list[date] = []
@@ -755,6 +757,7 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
 
 
 def run_dashboard_generator(script_path: Path, summary_json_path: Path, strict: bool) -> None:
+    # Dashboard is a separate script, it reads the same JSON.
     if not script_path.exists():
         message = f"Dashboard generator not found: {script_path}"
         if strict:
@@ -780,7 +783,7 @@ def run_dashboard_generator(script_path: Path, summary_json_path: Path, strict: 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Parse hunt and campaign markdown, validate, emit metrics JSON, refresh campaign auto-sections."
+        description="Parse hunts and campaigns, validate, write metrics JSON, refresh campaign auto sections."
     )
     parser.add_argument(
         "--repo-root",
@@ -827,10 +830,11 @@ def main() -> int:
     output_json = (args.output or (repo_root / "scripts" / "metrics" / "hunt_metrics_summary.json")).resolve()
     dashboard_script = (repo_root / "scripts" / "metrics" / "generate_dashboard.py").resolve()
 
+    # Parse campaigns first so hunt campaign_slugs can be checked against real slugs.
     campaign_files = find_markdown_files(campaigns_dir)
     campaign_records = [parse_campaign_file(p) for p in campaign_files]
 
-    # Only valid campaigns register a canonical slug (hunts may link to these).
+    # Invalid campaigns do not register a slug, so hunts cannot link to them.
     slug_to_campaign: dict[str, CampaignRecord] = {}
     for c in sorted(campaign_records, key=lambda x: x.path):
         if not c.slug or not c.is_valid:
@@ -896,6 +900,7 @@ def main() -> int:
             for line in err["errors"]:
                 print(f"  - {line}", file=sys.stderr)
         if args.strict:
+            # JSON is already written. Try dashboard with strict off so you still get a file.
             run_dashboard_generator(dashboard_script, output_json, strict=False)
             return 1
 
