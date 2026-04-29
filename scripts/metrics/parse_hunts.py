@@ -192,6 +192,11 @@ def normalize_list(value: Any) -> list[Any]:
     return [value]
 
 
+def _github_empty_field_marker(value: Any) -> bool:
+    # Issue forms write this when an optional answer is left blank.
+    return isinstance(value, str) and value.strip().lower() in {"_no response_", "_n/a_"}
+
+
 def parse_iso_date(value: Any, field_name: str, path: str, errors: list[str]) -> date | None:
     if value is None:
         return None
@@ -352,7 +357,11 @@ def validate_campaign(record: CampaignRecord) -> None:
         )
 
     parse_iso_date(fm.get("start_date"), "start_date", path, record.errors)
-    if "end_date" in fm and fm.get("end_date") not in (None, ""):
+    if (
+        "end_date" in fm
+        and fm.get("end_date") not in (None, "")
+        and not _github_empty_field_marker(fm.get("end_date"))
+    ):
         parse_iso_date(fm.get("end_date"), "end_date", path, record.errors)
 
     for list_field in ("mitre_tactics", "mitre_techniques"):

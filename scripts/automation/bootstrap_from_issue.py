@@ -36,6 +36,16 @@ def slugify(text: str) -> str:
     return s or "draft"
 
 
+def github_issue_text(value: str | None) -> str:
+    # Empty optional answers show up as this literal in issue bodies.
+    if value is None:
+        return ""
+    s = value.strip()
+    if s.lower() in {"_no response_", "_n/a_"}:
+        return ""
+    return s
+
+
 def parse_form_sections(body: str) -> dict[str, str]:
     sections: dict[str, list[str]] = {}
     current: str | None = None
@@ -208,7 +218,7 @@ def render_campaign_frontmatter(fields: dict[str, str], issue_num: int) -> str:
         f'threat_actor_name: {yaml_quote(fields.get("threat_actor_name", "Unknown"))}',
         f'start_date: {yaml_quote(fields.get("start_date", "YYYY-MM-DD"))}',
     ]
-    end_date = fields.get("end_date (optional)", "").strip()
+    end_date = github_issue_text(fields.get("end_date (optional)", ""))
     lines.append(f'end_date: {yaml_quote(end_date)}' if end_date else "end_date: null")
     lines.extend(
         [
@@ -248,6 +258,7 @@ def hunt_draft_banner(issue_num: int) -> str:
             "> ",
             "> **Prefilled from intake** (issue form → YAML frontmatter above, plus any **Imported Intake Narrative** section below):",
             "> - metadata fields used for dashboards and linking",
+            "> - Hunt Snapshot, ABLE table, Success Criteria (outcomes), and Execution Plan bullets where the form had answers",
             "> ",
             "> **You still need to complete** (this template body is mostly guidance until you replace it):",
             "> - PEAK sections with real operational detail",
@@ -268,11 +279,11 @@ def campaign_draft_banner(issue_num: int) -> str:
             "> ",
             "> **Prefilled from intake** (issue form → YAML frontmatter above, plus **Campaign overview** if imported):",
             "> - umbrella metadata for reporting and hunt linkage",
+            "> - objectives table, references, and MITRE themes row when the form had that text",
             "> ",
             "> **You still need to complete** (high-level only — no hunt queries here):",
-            "> - Threat actor context table (confidence, themes)",
-            "> - umbrella objectives table (measurable success signals)",
-            "> - references list (stable links / ticket IDs)",
+            "> - Threat actor context (confidence, narrative themes beyond IDs)",
+            "> - tighten success signals on objective rows if you used the intake bullet list",
             "> ",
             f"> _Generated from GitHub issue #{issue_num}. Remove this callout when the umbrella is ready for formal review._",
             "",
@@ -286,6 +297,223 @@ def annotate_after_heading(markdown: str, heading: str, note: str) -> str:
     if needle not in markdown:
         return markdown
     return markdown.replace(needle, needle + "\n\n" + note.strip() + "\n", 1)
+
+
+def _one_line_cell(text: str) -> str:
+    # Markdown table row: no raw newlines, escape pipes.
+    return text.replace("|", "\\|").replace("\n", " ").strip()
+
+
+def seed_campaign_body_from_intake(markdown: str, form: dict[str, str], slug: str) -> str:
+    # Mirrors YAML we already wrote. Hunters still edit narrative sections by hand.
+    name = _one_line_cell(form.get("threat_actor_name", "") or "Unknown")
+    typ = _one_line_cell(form.get("threat_actor_type", "") or "unknown")
+    start = _one_line_cell(form.get("start_date", "") or "YYYY-MM-DD")
+    end = github_issue_text(form.get("end_date (optional)", ""))
+    if end:
+        window_cell = f"`{start}` → `{_one_line_cell(end)}`"
+    else:
+        window_cell = f"`{start}` → _ongoing_"
+
+    markdown = markdown.replace(
+        "| **Slug** | `replace-with-kebab-case-slug` |",
+        f"| **Slug** | `{slug}` |",
+        1,
+    )
+    markdown = markdown.replace(
+        "| **Window** | `YYYY-MM-DD` → _ongoing or end date_ |",
+        f"| **Window** | {window_cell} |",
+        1,
+    )
+    markdown = markdown.replace(
+        "| **Primary actor** | `Unknown` (`unknown`) |",
+        f"| **Primary actor** | `{name}` (`{typ}`) |",
+        1,
+    )
+    markdown = markdown.replace(
+        "| **Actor name / cluster** | |",
+        f"| **Actor name / cluster** | {name} |",
+        1,
+    )
+    markdown = markdown.replace(
+        "| **Actor type** | |",
+        f"| **Actor type** | {typ} |",
+        1,
+    )
+    all_mitre = parse_line_values(form.get("overall_mitre_tactics_and_techniques", ""))
+    mitre_bits = [_one_line_cell(x) for x in all_mitre if x.strip()]
+    if mitre_bits:
+        markdown = markdown.replace(
+            "| **Known TTP themes** | bullet list at narrative level only |",
+            f"| **Known TTP themes** | {', '.join(mitre_bits)} |",
+            1,
+        )
+
+    outcomes_raw = (form.get("expected_outcomes", "") or "").strip()
+    if outcomes_raw:
+        obj_rows: list[str] = []
+        for line in outcomes_raw.splitlines():
+            s = line.strip()
+            if not s:
+                continue
+            if s.startswith("- "):
+                s = s[2:].strip()
+            obj_rows.append(f"| {_one_line_cell(s)} | _(define a measurable success signal)_ |")
+        if obj_rows:
+            old_obj = (
+                "| Objective | Success signal (umbrella-level) |\n"
+                "| --- | --- |\n"
+                "| Example: align hunt backlog to campaign TTPs | Backlog items tagged with this `campaign_slug` |\n"
+                "| Example: improve leadership visibility | Quarterly rollup references this campaign |\n"
+            )
+            new_obj = (
+                "| Objective | Success signal (umbrella-level) |\n"
+                "| --- | --- |\n" + "\n".join(obj_rows) + "\n"
+            )
+            markdown = markdown.replace(old_obj, new_obj, 1)
+
+    refs_raw = (form.get("references", "") or "").strip()
+    if refs_raw:
+        ref_lines = [ln.strip() for ln in refs_raw.splitlines() if ln.strip()]
+        if ref_lines:
+            bullets = "\n".join(f"- {ln}" for ln in ref_lines)
+            ref_intro = (
+                "## 📚 References\n\n"
+                "Stable links, report titles, or internal ticket IDs (one per line). Prefer public URLs when sharing outside the team.\n\n"
+            )
+            before = markdown
+            markdown = markdown.replace(ref_intro + "- \n", ref_intro + bullets + "\n", 1)
+            if markdown == before:
+                markdown = markdown.replace(ref_intro + "- ", ref_intro + bullets + "\n", 1)
+
+    return markdown
+
+
+def seed_hunt_able_from_intake(markdown: str, form: dict[str, str]) -> str:
+    # Issue form uses labels "ABLE - *". Third column in the template is example-only.
+    actor = _one_line_cell(form.get("ABLE - Actor", "") or "N/A")
+    behavior = _one_line_cell(form.get("ABLE - Behavior", "") or "N/A")
+    location = _one_line_cell(form.get("ABLE - Location", "") or "N/A")
+    evidence = _one_line_cell(form.get("ABLE - Evidence", "") or "N/A")
+    markdown = markdown.replace(
+        "| **Actor** | Who performs behavior (group, insider, malware, unknown) | `APT29 (nation_state)` |",
+        f"| **Actor** | Who performs behavior (group, insider, malware, unknown) | `{actor}` |",
+        1,
+    )
+    markdown = markdown.replace(
+        "| **Behavior** | Specific suspicious action to validate | `Encoded PowerShell from Office parent process` |",
+        f"| **Behavior** | Specific suspicious action to validate | `{behavior}` |",
+        1,
+    )
+    markdown = markdown.replace(
+        "| **Location** | Where behavior appears (hosts, identities, environment, logs) | `Finance endpoints, EDR process telemetry` |",
+        f"| **Location** | Where behavior appears (hosts, identities, environment, logs) | `{location}` |",
+        1,
+    )
+    markdown = markdown.replace(
+        "| **Evidence** | Observable artifacts confirming/refuting hypothesis | `Process tree + command line + child network activity` |",
+        f"| **Evidence** | Observable artifacts confirming/refuting hypothesis | `{evidence}` |",
+        1,
+    )
+    markdown = markdown.replace(
+        "**ABLE Notes**\n\n- **Actor**:\n- **Behavior**:\n- **Location**:\n- **Evidence**:",
+        f"**ABLE Notes**\n\n- **Actor**: {actor}\n- **Behavior**: {behavior}\n- **Location**: {location}\n- **Evidence**: {evidence}",
+        1,
+    )
+    return markdown
+
+
+def seed_hunt_snapshot_from_intake(markdown: str, form: dict[str, str]) -> str:
+    # Same fields as render_hunt_frontmatter; keeps the body table aligned with YAML.
+    hunt_id = _one_line_cell(form.get("hunt_id", "") or "HUNT-YYYY-XXXX")
+    hunt_type = _one_line_cell(form.get("hunt_type", "") or "Hypothesis-driven")
+    status = _one_line_cell(form.get("status", "") or "draft")
+    author = _one_line_cell(form.get("author", "") or "replace.with.handle")
+    updated = _one_line_cell(form.get("updated_date", "") or "YYYY-MM-DD")
+    markdown = markdown.replace("| Hunt ID | `HUNT-YYYY-XXXX` |", f"| Hunt ID | `{hunt_id}` |", 1)
+    markdown = markdown.replace(
+        "| Hunt Type | `Hypothesis-driven / Baseline/EDA / Model-Assisted/M-ATH` |",
+        f"| Hunt Type | `{hunt_type}` |",
+        1,
+    )
+    markdown = markdown.replace("| Status | `draft` |", f"| Status | `{status}` |", 1)
+    markdown = markdown.replace("| Author | `replace.with.handle` |", f"| Author | `{author}` |", 1)
+    markdown = markdown.replace("| Last Updated | `YYYY-MM-DD` |", f"| Last Updated | `{updated}` |", 1)
+    return markdown
+
+
+def seed_hunt_success_criteria_from_intake(markdown: str, form: dict[str, str]) -> str:
+    outcomes_raw = (form.get("outcomes", "") or "").strip()
+    if not outcomes_raw:
+        return markdown
+    bullets: list[str] = []
+    for line in outcomes_raw.splitlines():
+        s = line.strip()
+        if not s:
+            continue
+        bullets.append(f"- {_one_line_cell(s)}")
+    if not bullets:
+        return markdown
+    old = (
+        "### 4) Success Criteria\n\n"
+        "- What constitutes a meaningful signal?\n"
+        "- What evidence is needed to confirm/refute?\n"
+        "- What thresholds make this actionable?"
+    )
+    injected = (
+        "### 4) Success Criteria\n\n"
+        "> From issue **outcomes** (tighten into criteria below).\n\n"
+        + "\n".join(bullets)
+        + "\n\n"
+        "- What constitutes a meaningful signal?\n"
+        "- What evidence is needed to confirm/refute?\n"
+        "- What thresholds make this actionable?"
+    )
+    return markdown.replace(old, injected, 1)
+
+
+def _join_intake_list(items: list[str]) -> str:
+    cleaned = [_one_line_cell(x) for x in items if str(x).strip()]
+    if not cleaned:
+        return "_(empty on form, edit here)_"
+    return ", ".join(cleaned)
+
+
+def seed_hunt_execution_plan_from_intake(markdown: str, form: dict[str, str]) -> str:
+    sources = parse_checkbox_values(form.get("data_sources", "")) + parse_line_values(
+        form.get("data_sources_other (optional)", "")
+    )
+    locs = parse_checkbox_values(form.get("data_source_locations", "")) + parse_line_values(
+        form.get("data_source_locations_other (optional)", "")
+    )
+    langs = parse_checkbox_values(form.get("query_languages", "")) + parse_line_values(
+        form.get("query_languages_other (optional)", "")
+    )
+    tactics = [v.upper() for v in parse_line_values(form.get("mitre_tactics", "")) if v.strip()]
+    techniques = [v for v in parse_line_values(form.get("mitre_techniques", "")) if v.strip()]
+    campaigns = [v for v in parse_line_values(form.get("campaigns", "")) if v.strip()]
+    actors = parse_threat_actor_maps(form.get("threat_actors (name + type list)", ""))
+    actor_bits = [f"{a.get('name', 'Unknown')} ({a.get('type', 'unknown')})" for a in actors]
+
+    old = (
+        "- **Data sources selected**:\n"
+        "- **Data source locations**:\n"
+        "- **Query languages/tools**:\n"
+        "- **Execution sequence**:\n"
+        "\n"
+    )
+    new = (
+        f"- **Data sources selected**: {_join_intake_list(sources)}\n"
+        f"- **Data source locations**: {_join_intake_list(locs)}\n"
+        f"- **Query languages/tools**: {_join_intake_list(langs)}\n"
+        f"- **MITRE tactics (intake)**: {_join_intake_list(tactics)}\n"
+        f"- **MITRE techniques (intake)**: {_join_intake_list(techniques)}\n"
+        f"- **Campaigns (intake)**: {_join_intake_list(campaigns)}\n"
+        f"- **Threat actors (intake)**: {_join_intake_list(actor_bits)}\n"
+        "- **Execution sequence**: _(ordering and cadence; expand in PEAK narrative or here)_\n"
+        "\n"
+    )
+    return markdown.replace(old, new, 1)
 
 
 def annotate_hunt_markdown(markdown_body: str, issue_num: int) -> str:
@@ -360,6 +588,10 @@ def main() -> int:
             f"# 🔎 Threat Hunt: {title}",
             1,
         )
+        markdown_body = seed_hunt_snapshot_from_intake(markdown_body, form)
+        markdown_body = seed_hunt_success_criteria_from_intake(markdown_body, form)
+        markdown_body = seed_hunt_able_from_intake(markdown_body, form)
+        markdown_body = seed_hunt_execution_plan_from_intake(markdown_body, form)
         if narrative:
             markdown_body += (
                 "\n\n---\n\n## Imported Intake Narrative\n\n"
@@ -391,8 +623,13 @@ def main() -> int:
                 f"## 📋 Campaign Overview\n\n> **Prefilled from issue form** (issue #{issue_num}). Expand/refine scope and sourcing notes below as the umbrella matures.\n\n{overview}",
                 1,
             )
+        slug = slugify(
+            (form.get("campaign_slug (canonical)") or "").strip()
+            or (form.get("campaign_slug (suggested)") or "").strip()
+            or title
+        )
+        markdown_body = seed_campaign_body_from_intake(markdown_body, form, slug)
         markdown_body = annotate_campaign_markdown(markdown_body, issue_num)
-        slug = slugify(form.get("campaign_slug (canonical)", "").strip() or title)
         target = repo_root / "campaigns" / f"{slug}.md"
     else:
         write_outputs(args.output_file, created="false", reason="unsupported_label")
