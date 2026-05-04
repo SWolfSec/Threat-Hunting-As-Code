@@ -112,7 +112,7 @@ What this **umbrella** should achieve for the program (not per-hunt execution st
 <!-- auto:linked-hunts:start -->
 | Hunt ID | Title | Status | Link |
 | --- | --- | --- | --- |
-| _pending_ | _Parser will populate this table_ | — | — |
+| — | _No linked hunts yet_ | — | — |
 <!-- auto:linked-hunts:end -->
 
 ---
@@ -124,10 +124,14 @@ What this **umbrella** should achieve for the program (not per-hunt execution st
 <!-- auto:aggregated-outcomes:start -->
 | Metric | Value |
 | --- | ---: |
-| Child hunts linked | _TBD_ |
-| Total detections (rollup) | _TBD_ |
-| Total preventions (rollup) | _TBD_ |
-| Visibility gains (rollup) | _TBD_ |
+| Child hunts linked | 0 |
+| Detection opportunities (outcome lines) | 0 |
+| Prevention opportunities (outcome lines) | 0 |
+| Visibility opportunities (outcome lines) | 0 |
+| Hunts with ≥1 detection signal | 0 |
+| Hunts with ≥1 prevention signal | 0 |
+| Hunts with ≥1 visibility signal | 0 |
+| Last child activity (max updated/created) | — |
 <!-- auto:aggregated-outcomes:end -->
 
 ---

@@ -1,6 +1,6 @@
 # Threat Hunt Dashboard
 
-_Generated: 2026-05-04 01:52 UTC_
+_Generated: 2026-05-04 12:52 UTC_
 
 ## Active Campaigns
 
@@ -9,14 +9,15 @@ Campaigns with linked hunts (from `campaigns/*.md` and hunt `campaign_slugs` / k
 ```mermaid
 xychart-beta
     title "Linked hunts per campaign (count)"
-    x-axis ["scattered-spi…"]
+    x-axis ["scattered-spi…", "lumma-stealer…"]
     y-axis "Count" 0 --> 1
-    bar [1]
+    bar [1, 0]
 ```
 
 | Campaign | Threat actor | # Linked hunts | MITRE % covered (children) | Detections created (hunts) | Last activity | Campaign file |
 | --- | --- | ---: | ---: | ---: | --- | --- |
 | Scattered Spider MFA Fatigue & Helpdesk Social Engineering Campaign Q2 2026 | Scattered Spider (UNC3944) (cybercrime) | 1 | 14.29 | 1 | 2026-04-27 | [Open](campaigns/scattered-spider-mfa-fatigue-2026.md) |
+| Lumma Stealer SaaS Session Hijacking Campaign Q3 2026 | Lumma-affiliated crimeware operators (cybercrime) | 0 | 0.0 | 0 | — | [Open](campaigns/lumma-stealer-saas-session-hijack-2026-q3.md) |
 
 
 ## Summary Stats
@@ -26,7 +27,7 @@ xychart-beta
 | Hunts scanned | 1 |
 | Hunts valid | 1 |
 | Hunts invalid | 0 |
-| Campaigns valid | 1 |
+| Campaigns valid | 2 |
 | Campaigns invalid | 0 |
 | Hunts total (metrics scope) | 1 |
 | Query blocks extracted | 2 |

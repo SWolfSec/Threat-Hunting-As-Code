@@ -2,6 +2,30 @@
   "campaigns_summary": [
     {
       "aggregated_outcomes": {
+        "detection_opportunity_count": 0,
+        "hunts_with_detection": 0,
+        "hunts_with_prevention": 0,
+        "hunts_with_visibility": 0,
+        "prevention_opportunity_count": 0,
+        "visibility_opportunity_count": 0
+      },
+      "campaign_slug": "lumma-stealer-saas-session-hijack-2026-q3",
+      "last_activity_date": null,
+      "linked_hunt_count": 0,
+      "linked_hunt_ids": [],
+      "mitre_from_children": {
+        "coverage_percent_of_known_tactics": 0.0,
+        "unique_tactics": [],
+        "unique_techniques": []
+      },
+      "path": "campaigns/lumma-stealer-saas-session-hijack-2026-q3.md",
+      "status": "draft",
+      "threat_actor_name": "Lumma-affiliated crimeware operators",
+      "threat_actor_type": "cybercrime",
+      "title": "Lumma Stealer SaaS Session Hijacking Campaign Q3 2026"
+    },
+    {
+      "aggregated_outcomes": {
         "detection_opportunity_count": 1,
         "hunts_with_detection": 1,
         "hunts_with_prevention": 0,
@@ -51,8 +75,8 @@
   ],
   "meta": {
     "campaigns_invalid": 0,
-    "campaigns_scanned": 1,
-    "campaigns_valid": 1,
+    "campaigns_scanned": 2,
+    "campaigns_valid": 2,
     "generated_by": "scripts/metrics/parse_hunts.py",
     "hunts_invalid": 0,
     "hunts_scanned": 1,
