@@ -58,6 +58,15 @@ When a hunter submits **New Threat Hunt** or **New Campaign** intake issues, `.g
 2. Generates a draft file from the matching template (`hunts/` or `campaigns/`)
 3. Creates a unique branch with a commit containing the generated artifact so the hunter can review/refine before submitting a PR
 
+## Issue Guidelines
+
+To keep intake safe and predictable, automated template generation only runs for repository collaborators with **write** access (or higher).
+
+- If the issue author has `write` or `admin` permissions, the bootstrap workflow continues as normal.
+- If the issue author has `read`, `triage`, or no collaborator permission, the workflow exits successfully and skips generation.
+
+If you have general questions, ideas, or need help before opening intake issues, use GitHub Discussions or contact the maintainers.
+
 ### First hunt checklist (after the umbrella exists)
 
 1. Open GitHub Issues and select **New Threat Hunt**.

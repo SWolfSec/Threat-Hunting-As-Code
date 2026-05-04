@@ -18,17 +18,45 @@ jobs:
       ) &&
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association)
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
 
     steps:
+      - name: Resolve issue author repository permission
+        id: author_permission
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const username = context.payload.issue.user.login;
+            const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              username
+            });
+            const permission = (data.permission || '').toLowerCase();
+            const allowed = permission === 'write' || permission === 'admin';
+            core.setOutput('permission', permission || 'none');
+            core.setOutput('allowed', allowed ? 'true' : 'false');
+
+      - name: Skip when author lacks write/admin
+        if: steps.author_permission.outputs.allowed != 'true'
+        run: |
+          echo "User ${{ github.event.issue.user.login }} lacks required permissions - skipping template generation"
+          exit 0
+
       - name: Check out repository
+        if: steps.author_permission.outputs.allowed == 'true'
         uses: actions/checkout@v4
 
       - name: Set up Python
+        if: steps.author_permission.outputs.allowed == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Generate draft artifact from issue form
+        if: steps.author_permission.outputs.allowed == 'true'
         id: bootstrap
         run: |
           python scripts/automation/bootstrap_from_issue.py \
