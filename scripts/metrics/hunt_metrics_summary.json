@@ -2,21 +2,34 @@
   "campaigns_summary": [
     {
       "aggregated_outcomes": {
-        "detection_opportunity_count": 0,
-        "hunts_with_detection": 0,
+        "detection_opportunity_count": 1,
+        "hunts_with_detection": 1,
         "hunts_with_prevention": 0,
         "hunts_with_visibility": 0,
         "prevention_opportunity_count": 0,
         "visibility_opportunity_count": 0
       },
       "campaign_slug": "lumma-stealer-saas-session-hijack-2026-q3",
-      "last_activity_date": null,
-      "linked_hunt_count": 0,
-      "linked_hunt_ids": [],
+      "last_activity_date": "2026-08-04",
+      "linked_hunt_count": 1,
+      "linked_hunt_ids": [
+        "HUNT-2026-LUMMA-0001"
+      ],
       "mitre_from_children": {
-        "coverage_percent_of_known_tactics": 0.0,
-        "unique_tactics": [],
-        "unique_techniques": []
+        "coverage_percent_of_known_tactics": 28.57,
+        "unique_tactics": [
+          "TA0001",
+          "TA0005",
+          "TA0006",
+          "TA0011"
+        ],
+        "unique_techniques": [
+          "T1059.001",
+          "T1078",
+          "T1528",
+          "T1539",
+          "T1555"
+        ]
       },
       "path": "campaigns/lumma-stealer-saas-session-hijack-2026-q3.md",
       "status": "draft",
@@ -61,6 +74,18 @@
   ],
   "hunts": [
     {
+      "created_date": "2026-08-04",
+      "hunt_id": "HUNT-2026-LUMMA-0001",
+      "hunt_type": "Hypothesis-driven",
+      "linked_campaign_slugs": [
+        "lumma-stealer-saas-session-hijack-2026-q3"
+      ],
+      "path": "hunts/hunt-2026-lumma-0001.md",
+      "status": "draft",
+      "title": "Suspicious SaaS session replay after Lumma-style infostealer activity",
+      "updated_date": "2026-08-04"
+    },
+    {
       "created_date": "2026-04-27",
       "hunt_id": "HUNT-YYYY-XXXX",
       "hunt_type": "Hypothesis-driven",
@@ -79,13 +104,15 @@
     "campaigns_valid": 2,
     "generated_by": "scripts/metrics/parse_hunts.py",
     "hunts_invalid": 0,
-    "hunts_scanned": 1,
-    "hunts_valid": 1
+    "hunts_scanned": 2,
+    "hunts_valid": 2
   },
   "metrics": {
     "campaigns": {
       "campaign_counts": {
+        "Lumma Stealer SaaS Session Hijacking Campaign Q3 2026": 1,
         "Scattered Spider MFA Fatigue & Helpdesk Social Engineering Campaign Q2 2026": 1,
+        "lumma-stealer-saas-session-hijack-2026-q3": 1,
         "scattered-spider-mfa-fatigue-2026": 1
       },
       "coverage_percent_hunts_with_campaigns": 100.0
@@ -93,65 +120,81 @@
     "distribution": {
       "data_source_counts": {
         "[ ] cloud_audit": 1,
-        "[ ] dns_logs": 1,
+        "[ ] dns_logs": 2,
+        "[ ] email_security": 1,
         "[ ] endpoint_file": 1,
-        "[ ] endpoint_network": 1,
+        "[ ] endpoint_network": 2,
         "[ ] endpoint_process": 1,
-        "[ ] endpoint_registry": 1,
-        "[ ] firewall_logs": 1,
+        "[ ] endpoint_registry": 2,
+        "[ ] firewall_logs": 2,
         "[ ] proxy_logs": 1,
-        "_No response_": 1,
-        "edr_alerts": 1,
+        "_No response_": 2,
+        "cloud_audit": 1,
+        "edr_alerts": 2,
         "email_security": 1,
-        "identity_auth": 1,
-        "saas_activity": 1
+        "endpoint_file": 1,
+        "endpoint_process": 1,
+        "identity_auth": 2,
+        "proxy_logs": 1,
+        "saas_activity": 2
       },
       "data_source_location_counts": {
-        "EDR platform": 1,
-        "Identity provider console": 1,
-        "SIEM": 1,
-        "SaaS security platform": 1,
+        "Cloud provider logs": 1,
+        "Data lake / warehouse": 1,
+        "EDR platform": 2,
+        "Identity provider console": 2,
+        "SIEM": 2,
+        "SaaS security platform": 2,
         "[ ] Cloud provider logs": 1,
         "[ ] Data lake / warehouse": 1,
-        "[ ] Endpoint local logs (manual collection)": 1,
-        "[ ] NDR platform": 1,
-        "[ ] SOAR case system": 1,
-        "[ ] Server local logs (manual collection)": 1,
-        "_No response_": 1
+        "[ ] Endpoint local logs (manual collection)": 2,
+        "[ ] NDR platform": 2,
+        "[ ] SOAR case system": 2,
+        "[ ] Server local logs (manual collection)": 2,
+        "_No response_": 2
       },
       "hunt_type_counts": {
-        "Hypothesis-driven": 1
+        "Hypothesis-driven": 2
       },
       "query_language_counts": {
-        "KQL": 1,
-        "SPL": 1,
+        "KQL": 2,
+        "SPL": 2,
         "SQL": 1,
-        "[ ] Bash": 1,
-        "[ ] EQL": 1,
-        "[ ] PowerShell": 1,
-        "[ ] Python": 1,
-        "[ ] Sigma": 1,
-        "[ ] Velociraptor VQL": 1,
-        "[ ] XQL": 1,
-        "[ ] YARA-L": 1,
-        "_No response_": 1
+        "[ ] Bash": 2,
+        "[ ] EQL": 2,
+        "[ ] PowerShell": 2,
+        "[ ] Python": 2,
+        "[ ] SQL": 1,
+        "[ ] Sigma": 2,
+        "[ ] Velociraptor VQL": 2,
+        "[ ] XQL": 2,
+        "[ ] YARA-L": 2,
+        "_No response_": 2
       },
       "status_counts": {
-        "draft": 1
+        "draft": 2
       }
     },
     "hunts_by_quarter": {
-      "2026-Q2": 1
+      "2026-Q2": 1,
+      "2026-Q3": 1
     },
     "mitre": {
       "coverage_percent_hunts_with_mitre_mapping": 100.0,
-      "coverage_percent_of_known_tactics": 14.29,
+      "coverage_percent_of_known_tactics": 28.57,
       "tactic_counts": {
-        "TA0001": 1,
-        "TA0006": 1
+        "TA0001": 2,
+        "TA0005": 1,
+        "TA0006": 2,
+        "TA0011": 1
       },
       "technique_counts": {
+        "T1059.001": 1,
+        "T1078": 1,
         "T1199": 1,
+        "T1528": 1,
+        "T1539": 1,
+        "T1555": 1,
         "T1556.004": 1,
         "T1566.002": 1,
         "T1621": 1
@@ -159,12 +202,12 @@
     },
     "outcomes": {
       "category_counts": {
-        "detections": 1,
+        "detections": 2,
         "preventions": 0,
         "visibility_created": 0
       },
       "hunt_level_counts": {
-        "hunts_with_detections": 1,
+        "hunts_with_detections": 2,
         "hunts_with_preventions": 0,
         "hunts_with_visibility_created": 0
       }
@@ -172,16 +215,17 @@
     "threat_actors": {
       "coverage_percent_hunts_with_threat_actors": 100.0,
       "name_counts": {
+        "Lumma-affiliated crimeware operators": 1,
         "Scattered Spider (UNC3944)": 1
       },
       "type_counts": {
-        "cybercrime": 1
+        "cybercrime": 2
       }
     },
     "totals": {
-      "hunts_total": 1,
-      "ioc_blocks_total": 2,
-      "query_blocks_total": 2
+      "hunts_total": 2,
+      "ioc_blocks_total": 4,
+      "query_blocks_total": 4
     }
   },
   "validation": {

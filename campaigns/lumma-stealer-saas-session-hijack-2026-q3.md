@@ -112,7 +112,7 @@ What this **umbrella** should achieve for the program (not per-hunt execution st
 <!-- auto:linked-hunts:start -->
 | Hunt ID | Title | Status | Link |
 | --- | --- | --- | --- |
-| — | _No linked hunts yet_ | — | — |
+| `HUNT-2026-LUMMA-0001` | Suspicious SaaS session replay after Lumma-style infostealer activity | draft | [HUNT-2026-LUMMA-0001](../hunts/hunt-2026-lumma-0001.md) |
 <!-- auto:linked-hunts:end -->
 
 ---
@@ -124,14 +124,14 @@ What this **umbrella** should achieve for the program (not per-hunt execution st
 <!-- auto:aggregated-outcomes:start -->
 | Metric | Value |
 | --- | ---: |
-| Child hunts linked | 0 |
-| Detection opportunities (outcome lines) | 0 |
+| Child hunts linked | 1 |
+| Detection opportunities (outcome lines) | 1 |
 | Prevention opportunities (outcome lines) | 0 |
 | Visibility opportunities (outcome lines) | 0 |
-| Hunts with ≥1 detection signal | 0 |
+| Hunts with ≥1 detection signal | 1 |
 | Hunts with ≥1 prevention signal | 0 |
 | Hunts with ≥1 visibility signal | 0 |
-| Last child activity (max updated/created) | — |
+| Last child activity (max updated/created) | 2026-08-04 |
 <!-- auto:aggregated-outcomes:end -->
 
 ---
