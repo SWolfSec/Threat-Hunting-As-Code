@@ -88,7 +88,7 @@ What this **umbrella** should achieve for the program (not per-hunt execution st
 <!-- auto:linked-hunts:start -->
 | Hunt ID | Title | Status | Link |
 | --- | --- | --- | --- |
-| _pending_ | _Parser will populate this table_ | — | — |
+| `HUNT-YYYY-XXXX` | MFA push fatigue and helpdesk-assisted bypass (OKTA / Entra) under Scattered Spider umbrella | draft | [HUNT-YYYY-XXXX](../hunts/mfa-push-fatigue-and-helpdesk-assisted-bypass-okta-entra-under-scattered-spider-umbrella.md) |
 <!-- auto:linked-hunts:end -->
 
 ---
@@ -100,10 +100,14 @@ What this **umbrella** should achieve for the program (not per-hunt execution st
 <!-- auto:aggregated-outcomes:start -->
 | Metric | Value |
 | --- | ---: |
-| Child hunts linked | _TBD_ |
-| Total detections (rollup) | _TBD_ |
-| Total preventions (rollup) | _TBD_ |
-| Visibility gains (rollup) | _TBD_ |
+| Child hunts linked | 1 |
+| Detection opportunities (outcome lines) | 1 |
+| Prevention opportunities (outcome lines) | 0 |
+| Visibility opportunities (outcome lines) | 0 |
+| Hunts with ≥1 detection signal | 1 |
+| Hunts with ≥1 prevention signal | 0 |
+| Hunts with ≥1 visibility signal | 0 |
+| Last child activity (max updated/created) | 2026-04-27 |
 <!-- auto:aggregated-outcomes:end -->
 
 ---

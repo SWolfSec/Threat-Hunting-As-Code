@@ -1,0 +1,166 @@
+{
+  "campaigns_summary": [
+    {
+      "aggregated_outcomes": {
+        "detection_opportunity_count": 1,
+        "hunts_with_detection": 1,
+        "hunts_with_prevention": 0,
+        "hunts_with_visibility": 0,
+        "prevention_opportunity_count": 0,
+        "visibility_opportunity_count": 0
+      },
+      "campaign_slug": "scattered-spider-mfa-fatigue-2026",
+      "last_activity_date": "2026-04-27",
+      "linked_hunt_count": 1,
+      "linked_hunt_ids": [
+        "HUNT-YYYY-XXXX"
+      ],
+      "mitre_from_children": {
+        "coverage_percent_of_known_tactics": 14.29,
+        "unique_tactics": [
+          "TA0001",
+          "TA0006"
+        ],
+        "unique_techniques": [
+          "T1199",
+          "T1556.004",
+          "T1566.002",
+          "T1621"
+        ]
+      },
+      "path": "campaigns/scattered-spider-mfa-fatigue-2026.md",
+      "status": "draft",
+      "threat_actor_name": "Scattered Spider (UNC3944)",
+      "threat_actor_type": "cybercrime",
+      "title": "Scattered Spider MFA Fatigue & Helpdesk Social Engineering Campaign Q2 2026"
+    }
+  ],
+  "hunts": [
+    {
+      "created_date": "2026-04-27",
+      "hunt_id": "HUNT-YYYY-XXXX",
+      "hunt_type": "Hypothesis-driven",
+      "linked_campaign_slugs": [
+        "scattered-spider-mfa-fatigue-2026"
+      ],
+      "path": "hunts/mfa-push-fatigue-and-helpdesk-assisted-bypass-okta-entra-under-scattered-spider-umbrella.md",
+      "status": "draft",
+      "title": "MFA push fatigue and helpdesk-assisted bypass (OKTA / Entra) under Scattered Spider umbrella",
+      "updated_date": "2026-04-27"
+    }
+  ],
+  "meta": {
+    "campaigns_invalid": 0,
+    "campaigns_scanned": 1,
+    "campaigns_valid": 1,
+    "generated_by": "scripts/metrics/parse_hunts.py",
+    "hunts_invalid": 0,
+    "hunts_scanned": 1,
+    "hunts_valid": 1
+  },
+  "metrics": {
+    "campaigns": {
+      "campaign_counts": {
+        "Scattered Spider MFA Fatigue & Helpdesk Social Engineering Campaign Q2 2026": 1,
+        "scattered-spider-mfa-fatigue-2026": 1
+      },
+      "coverage_percent_hunts_with_campaigns": 100.0
+    },
+    "distribution": {
+      "data_source_counts": {
+        "[ ] cloud_audit": 1,
+        "[ ] dns_logs": 1,
+        "[ ] endpoint_file": 1,
+        "[ ] endpoint_network": 1,
+        "[ ] endpoint_process": 1,
+        "[ ] endpoint_registry": 1,
+        "[ ] firewall_logs": 1,
+        "[ ] proxy_logs": 1,
+        "_No response_": 1,
+        "edr_alerts": 1,
+        "email_security": 1,
+        "identity_auth": 1,
+        "saas_activity": 1
+      },
+      "data_source_location_counts": {
+        "EDR platform": 1,
+        "Identity provider console": 1,
+        "SIEM": 1,
+        "SaaS security platform": 1,
+        "[ ] Cloud provider logs": 1,
+        "[ ] Data lake / warehouse": 1,
+        "[ ] Endpoint local logs (manual collection)": 1,
+        "[ ] NDR platform": 1,
+        "[ ] SOAR case system": 1,
+        "[ ] Server local logs (manual collection)": 1,
+        "_No response_": 1
+      },
+      "hunt_type_counts": {
+        "Hypothesis-driven": 1
+      },
+      "query_language_counts": {
+        "KQL": 1,
+        "SPL": 1,
+        "SQL": 1,
+        "[ ] Bash": 1,
+        "[ ] EQL": 1,
+        "[ ] PowerShell": 1,
+        "[ ] Python": 1,
+        "[ ] Sigma": 1,
+        "[ ] Velociraptor VQL": 1,
+        "[ ] XQL": 1,
+        "[ ] YARA-L": 1,
+        "_No response_": 1
+      },
+      "status_counts": {
+        "draft": 1
+      }
+    },
+    "hunts_by_quarter": {
+      "2026-Q2": 1
+    },
+    "mitre": {
+      "coverage_percent_hunts_with_mitre_mapping": 100.0,
+      "coverage_percent_of_known_tactics": 14.29,
+      "tactic_counts": {
+        "TA0001": 1,
+        "TA0006": 1
+      },
+      "technique_counts": {
+        "T1199": 1,
+        "T1556.004": 1,
+        "T1566.002": 1,
+        "T1621": 1
+      }
+    },
+    "outcomes": {
+      "category_counts": {
+        "detections": 1,
+        "preventions": 0,
+        "visibility_created": 0
+      },
+      "hunt_level_counts": {
+        "hunts_with_detections": 1,
+        "hunts_with_preventions": 0,
+        "hunts_with_visibility_created": 0
+      }
+    },
+    "threat_actors": {
+      "coverage_percent_hunts_with_threat_actors": 100.0,
+      "name_counts": {
+        "Scattered Spider (UNC3944)": 1
+      },
+      "type_counts": {
+        "cybercrime": 1
+      }
+    },
+    "totals": {
+      "hunts_total": 1,
+      "ioc_blocks_total": 2,
+      "query_blocks_total": 2
+    }
+  },
+  "validation": {
+    "errors": []
+  }
+}
